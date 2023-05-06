@@ -1,5 +1,7 @@
+const Apperr = require("../ErrorHandling/App")
+
 module.exports = fn =>{
     return (req,res,next)=>{
-        fn(req,res,next).catch(next)
+        fn(req,res,next).catch(err => next(new Apperr(err,500)))
     }
 }

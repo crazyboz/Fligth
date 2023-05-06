@@ -3,7 +3,7 @@ class App extends Error{
         super(message)
         this.statusCode=status
 
-        Error.captureStackTrace(this.this.constructor)
+        Error.captureStackTrace(this.constructor)
     }
 }
 

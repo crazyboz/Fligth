@@ -3,6 +3,7 @@ const express = require("express")
 const mongoose= require("mongoose")
 const AppErr=require("./ErrorHandling/App.js")
 const AdminRouter=require("./Admin.js")
+const UsersRouter = require("./Users.js")
 const app= express()
 
 let db="mongodb+srv://dineshn20:<password>@cluster0.iv9wg6d.mongodb.net/flight?retryWrites=true&w=majority"
@@ -20,6 +21,8 @@ app.use(express.json())
 
 //Router
 app.use("/admin",AdminRouter)
+app.use("/user",UsersRouter)
+
 
 //no such url
 app.all("*",(req,res,next)=>{
