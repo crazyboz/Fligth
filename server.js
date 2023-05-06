@@ -26,15 +26,15 @@ app.use("/user",UsersRouter)
 
 //no such url
 app.all("*",(req,res,next)=>{
-    next(new AppErr(`can't find the ${req.originalUrl} on this server`),404)
+    next(new AppErr(`can't find the ${req.originalUrl} on this server`,404))
 })
 
 
 //error handling
 app.use((err,req,res,next)=>{
     err.statusCode=err.statusCode || 500
-    err.messagge =err.messagge || "error"
-    res.status(err.statusCode).send(err.messagge)
+    err.message =err.message || "error"
+    res.status(err.statusCode).send(err.message)
 })
 
 

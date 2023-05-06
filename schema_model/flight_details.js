@@ -1,4 +1,5 @@
-const mongoose= require("mongoose")
+const mongoose= require("mongoose");
+const AirportDetails = require("./airport");
 
 const flight = new mongoose.Schema({
     flightId:{
@@ -12,20 +13,18 @@ const flight = new mongoose.Schema({
         required:[true,"Enter the name of the flight uniqulyrs"]
     },
     from:{
-        type:String,
-        required:[true,"Enter the flight take of place"]
+        type:mongoose.Schema.ObjectId,
+        ref:AirportDetails,
+        required:[true,"Please enter airport adress"]
     },
     to:{
-        type:String,
-        required:[true,"Required the destination place"]
+        type:mongoose.Schema.ObjectId,
+        ref:AirportDetails,
+        required:[true,"Please enter airport adress"]
     },
     flightTime:{
         type:String,
         required:[true,"Required the flight timing"]
-    },
-    prize:{
-        type:Number,
-        required:[true, "Required the booking cost"]
     },
     takeOfTime:{
         type:Date,
@@ -35,12 +34,22 @@ const flight = new mongoose.Schema({
         type:Date,
         required:[true,"Required the flight take of time"]
     },
-    totalSeat:{
-        type:Number,
-        default:60,
-        min:0,
-        max:60
-    },
+    seats:[{
+        seattype:{
+            type:String,
+            required:true,
+            enum:["bussinessclass","normalclass"]
+        },
+        numberseats:{
+            type:Number,
+            required:true,
+            default:60
+        },
+        ticketcost:{
+            type:Number,
+            required:true,
+        }
+    }]
 })
 
 const FlightDetails = mongoose.model("FlightDetails",flight)

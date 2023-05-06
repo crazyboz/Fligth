@@ -4,6 +4,8 @@ const CatchAsync = require("./components/Error.js")
 const flightDetails = require("./schema_model/flight_details.js")
 const jwt = require("jsonwebtoken")
 const {protectionadmin}= require("./components/Auth")
+const AirportDetails = require("./schema_model/airport")
+const Apperr = require("./ErrorHandling/App")
 
 const AdminRouter=express.Router()
 
@@ -50,7 +52,29 @@ AdminRouter.post("/login",CatchAsync(async (req,res,next)=>{
 }))
 
 AdminRouter.post("/flight",protectionadmin,CatchAsync(async (req,res)=>{
-    const data = await flightDetails.create(req.body);
+    const {flightId,name,from,to,flightTime,takeOfTime,destinationTime,seatList}=req.body
+
+    if(!flightId || !name || !from || !to || !flightTime || !takeOfTime || !destinationTime || !seatList){
+        return next(new Apperr("Please enter the flight details",400))
+    }
+
+    const seats=[] 
+
+    seatList.forEach(element => {
+        if(!element.seattype || !element.ticketcost){
+            return next(new Apperr("Please enter the flight details",400))
+        }
+
+        let obj={}
+
+        obj["seattype"]=element.seattype
+        obj["numberseats"]=element.numberseats
+        obj["ticketcost"]=element.ticketcost
+
+        seats.push(obj)
+    });
+
+    const data = await flightDetails.create({flightId,name,from,to,flightTime,takeOfTime,destinationTime,seats});
     res.status(200).send(data)
 }))
 
@@ -69,6 +93,18 @@ AdminRouter.get("/flight", protectionadmin,async (req,res)=>{
 AdminRouter.delete("/flight",protectionadmin,async (req,res)=>{
     await flightDetails.findOneAndDelete({flightId:req.query.flightId}) 
     res.status(200).send({"masg":"successfully deleted"})  
+})
+
+AdminRouter.post("/airport",protectionadmin,async (req,res)=>{
+    const {name,country,city}=req.body
+
+    if(!name || !country || !city){
+        return next(new Apperr("Please enter the details details"),400)
+    }
+
+    const data = await AirportDetails.create({name,city,country})
+
+    res.status(200).send(data)
 })
 
 module.exports=AdminRouter

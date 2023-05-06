@@ -4,10 +4,11 @@ const jwt =require("jsonwebtoken")
 const User = require("../schema_model/users")
 const {promisify} = require("util")
 
+
 exports.protectionuser= CatchAsync(async (req,res,next)=>{
     const token = req.query.Authentication
     if(!token){
-        return next(new Apperr("You are logged out",401))
+        return next(new Apperr("You are logged out",400))
     }
     
     const result  =  await promisify(jwt.verify)(token,process.env.JSON_SECRET)

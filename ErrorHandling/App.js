@@ -1,10 +1,10 @@
-class App extends Error{
+class Apperr extends Error{
     constructor(message,status){
         super(message)
         this.statusCode=status
-
-        Error.captureStackTrace(this.constructor)
+        
+        Error.captureStackTrace(this,this.constructor)
     }
 }
 
-module.exports=App
+module.exports=Apperr
