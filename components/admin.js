@@ -1,35 +1,12 @@
-const express= require("express")
-const User = require("./schema_model/users")
-const CatchAsync = require("./components/Error.js")
-const flightDetails = require("./schema_model/flight_details.js")
+const CatchAsync = require("../components/Error.js")
+const User = require("../schema_model/users")
+const flightDetails = require("../schema_model/flight_details.js")
 const jwt = require("jsonwebtoken")
-const {protectionadmin}= require("./components/Auth")
-const AirportDetails = require("./schema_model/airport")
-const Apperr = require("./ErrorHandling/App")
-const BookedDetails = require("./schema_model/booking")
+const AirportDetails = require("../schema_model/airport.js")
+const Apperr = require("../ErrorHandling/App.js")
+const BookedDetails = require("../schema_model/booking.js")
 
-const AdminRouter=express.Router()
-
-// AdminRouter.post("/signup",CatchAsync(async (req,res,next)=>{
-//     const obj={}
-//     obj["username"]=req.body.username
-//     obj["email"]=req.body.email
-//     obj["password"]=req.body.password
-//     obj["conformpassword"]=req.body.conformpassword
-//     obj["role"]=req.body.role
-
-//     const data = await User.create(obj)
-
-//     const token = jwt.sign({id:data._id},process.env.JSON_SECRET,{expiresIn:process.env.JSON_EXP})
-
-//     res.status(201).send({
-//         status:"success",
-//         token,
-//         data
-//     })
-// }))
-
-AdminRouter.post("/login",CatchAsync(async (req,res,next)=>{
+exports.login=CatchAsync(async (req,res,next)=>{
     const {email,password}=req.body
 
     if(!email || !password){
@@ -58,31 +35,26 @@ AdminRouter.post("/login",CatchAsync(async (req,res,next)=>{
 
     res.status(200).send({
         status:"success",
-        token,
         data
     })
-}))
+})
 
-AdminRouter.get("/logout",protectionadmin,CatchAsync((req,res)=>{
-    const token = req.headers.cookie
+exports.logout = CatchAsync((req,res)=>{
 
-    if(token){
-        let options = {
-            expires : new Date(
-                Date.now()+process.env.JSON_EX * 24 *60*60*1000
-            ),
-            httpOnly:true
-        }
-        if(process.env.NODE_ENV === "production"){
-            options.secure = true
-        }
-        res.cookie("jwt",token,options)
+    let options = {
+        expires : new Date(
+            Date.now()+process.env.JSON_EX * 24 *60*60*1000
+        ),
+        httpOnly:true
     }
+    if(process.env.NODE_ENV === "production"){
+        options.secure = true
+    }
+    res.cookie("jwt","",options)
+    res.status(200).json({msg:"successfully loged out"})
+})
 
-    res.status(200).send("successfully loged out")
-}))
-
-AdminRouter.post("/flight",protectionadmin,CatchAsync(async (req,res)=>{
+exports.addflight = CatchAsync(async (req,res)=>{
     const {flightId,name,from,to,flightTime,takeOfTime,destinationTime,seatList}=req.body
 
     if(!flightId || !name || !from || !to || !flightTime || !takeOfTime || !destinationTime || !seatList){
@@ -107,9 +79,9 @@ AdminRouter.post("/flight",protectionadmin,CatchAsync(async (req,res)=>{
 
     const data = await flightDetails.create({flightId,name,from,to,flightTime,takeOfTime,destinationTime,seats});
     res.status(200).send(data)
-}))
+})
 
-AdminRouter.get("/booked", protectionadmin,async (req,res)=>{
+exports.booking = CatchAsync(async (req,res)=>{
     let {flightId,bookedtime}=req.query 
     
     if(!flightId && !bookedtime){
@@ -126,7 +98,7 @@ AdminRouter.get("/booked", protectionadmin,async (req,res)=>{
     res.status(200).send(data)
 })
 
-AdminRouter.delete("/flight",protectionadmin,async (req,res)=>{
+exports.deleteflight = CatchAsync(async (req,res)=>{
     const id=req.query.flightId
     if(!id){
         return next(new Apperr("Please send the flight id",400))
@@ -136,7 +108,7 @@ AdminRouter.delete("/flight",protectionadmin,async (req,res)=>{
     res.status(200).send({"masg":"successfully deleted"})  
 })
 
-AdminRouter.post("/airport",protectionadmin,async (req,res)=>{
+exports.addairport = CatchAsync(async (req,res)=>{
     const {name,country,city}=req.body
 
     if(!name || !country || !city){
@@ -147,5 +119,3 @@ AdminRouter.post("/airport",protectionadmin,async (req,res)=>{
 
     res.status(200).send(data)
 })
-
-module.exports=AdminRouter

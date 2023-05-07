@@ -2,11 +2,11 @@ require("dotenv").config()
 const express = require("express")
 const mongoose= require("mongoose")
 const AppErr=require("./ErrorHandling/App.js")
-const AdminRouter=require("./Admin.js")
-const UsersRouter = require("./Users.js")
+const AdminRouter=require("./Routers/Admin.js")
+const UsersRouter = require("./Routers/Users.js")
 const app= express()
 
-let db="mongodb+srv://dineshn20:<password>@cluster0.iv9wg6d.mongodb.net/flight?retryWrites=true&w=majority"
+let db=process.env.DB
 db=db.replace("<password>",process.env.DBPASSWORD)
 
 //database connection
