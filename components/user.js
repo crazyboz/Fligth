@@ -175,7 +175,7 @@ exports.getbooking = CatchAsync(async (req,res,next)=>{
 })
 
 exports.search = CatchAsync(async(req,res,next)=>{
-    const {departuredate,from,to}=req.query
+    const {departuredate,from,to}=req.body
 
     if(departuredate){
         const data = await FlightDetails.find().where("takeOfTime").gte(departuredate)
