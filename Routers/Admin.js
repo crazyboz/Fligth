@@ -1,6 +1,6 @@
 const express= require("express")
 const {protectionadmin}= require("../components/Auth")
-const {login,logout,addflight,deleteflight,addairport} = require("../components/admin")
+const {login,logout,addflight,booking,deleteflight,addairport} = require("../components/admin")
 
 const AdminRouter=express.Router()
 
