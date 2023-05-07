@@ -34,6 +34,11 @@ const flight = new mongoose.Schema({
         type:Date,
         required:[true,"Required the flight take of time"]
     },
+    flighttype:{
+        type:String,
+        enum:["domestic","international"],
+        required:[true,"Please enter the flight type"]
+    },
     seats:[{
         seattype:{
             type:String,

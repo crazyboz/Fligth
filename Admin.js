@@ -6,6 +6,7 @@ const jwt = require("jsonwebtoken")
 const {protectionadmin}= require("./components/Auth")
 const AirportDetails = require("./schema_model/airport")
 const Apperr = require("./ErrorHandling/App")
+const BookedDetails = require("./schema_model/booking")
 
 const AdminRouter=express.Router()
 
@@ -44,11 +45,41 @@ AdminRouter.post("/login",CatchAsync(async (req,res,next)=>{
     
     const token = jwt.sign({id:data._id},process.env.JSON_SECRET,{expiresIn:process.env.JSON_EXP})
 
+    let options = {
+        expires : new Date(
+            Date.now()+process.env.JSON_EX * 24 *60*60*1000
+        ),
+        httpOnly:true
+    }
+    if(process.env.NODE_ENV === "production"){
+        options.secure = true
+    }
+    res.cookie("jwt",token,options)
+
     res.status(200).send({
         status:"success",
         token,
         data
     })
+}))
+
+AdminRouter.get("/logout",protectionadmin,CatchAsync((req,res)=>{
+    const token = req.headers.cookie
+
+    if(token){
+        let options = {
+            expires : new Date(
+                Date.now()+process.env.JSON_EX * 24 *60*60*1000
+            ),
+            httpOnly:true
+        }
+        if(process.env.NODE_ENV === "production"){
+            options.secure = true
+        }
+        res.cookie("jwt",token,options)
+    }
+
+    res.status(200).send("successfully loged out")
 }))
 
 AdminRouter.post("/flight",protectionadmin,CatchAsync(async (req,res)=>{
@@ -78,20 +109,30 @@ AdminRouter.post("/flight",protectionadmin,CatchAsync(async (req,res)=>{
     res.status(200).send(data)
 }))
 
-AdminRouter.get("/flight", protectionadmin,async (req,res)=>{
-    let data 
-    if(req.query.flightName){
-        data = await flightDetails.find({name:req.query.flightName}).exec()
-    }else if(req.query.flightTime){
-        // data = await flightDetails.find({'$where': 'this.takeOfTime.toJSON().slice(0, 10) == "2023-05-10"'})
-        data="fghj"
+AdminRouter.get("/booked", protectionadmin,async (req,res)=>{
+    let {flightId,bookedtime}=req.query 
+    
+    if(!flightId && !bookedtime){
+        return next(new Apperr("please enter the deatils",400))
     }
+    
+    const Id=await flightDetails.findOne({"flightId":flightId}).select({"_id":1})
 
+    const data = await BookedDetails.find({flightId:Id}).where("bookedtime").gte(bookedtime)
+
+    if(!data){
+        return next(new Apperr("There is no data avauble",400))
+    }
     res.status(200).send(data)
 })
 
 AdminRouter.delete("/flight",protectionadmin,async (req,res)=>{
-    await flightDetails.findOneAndDelete({flightId:req.query.flightId}) 
+    const id=req.query.flightId
+    if(!id){
+        return next(new Apperr("Please send the flight id",400))
+    } 
+
+    await flightDetails.findOneAndDelete({flightId:id}) 
     res.status(200).send({"masg":"successfully deleted"})  
 })
 

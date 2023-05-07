@@ -4,9 +4,8 @@ const jwt =require("jsonwebtoken")
 const User = require("../schema_model/users")
 const {promisify} = require("util")
 
-
 exports.protectionuser= CatchAsync(async (req,res,next)=>{
-    const token = req.query.Authentication
+    const token = req.headers.cookie.split("=")[1]
     if(!token){
         return next(new Apperr("You are logged out",400))
     }
@@ -23,7 +22,8 @@ exports.protectionuser= CatchAsync(async (req,res,next)=>{
 })
 
 exports.protectionadmin=CatchAsync(async (req,res,next)=>{
-    const token = req.query.Authentication
+    const token = req.headers.cookie.split("=")[1]
+
     if(!token){
         return next(new Apperr("You are logged out",401))
     }
@@ -38,3 +38,4 @@ exports.protectionadmin=CatchAsync(async (req,res,next)=>{
     req.user=data
     next()
 })
+

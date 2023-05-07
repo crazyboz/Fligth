@@ -22,6 +22,17 @@ UsersRouter.post("/signup",CatchAsync(async (req,res,next)=>{
 
     const token = jwt.sign({id:data._id},process.env.JSON_SECRET,{expiresIn:process.env.JSON_EXP})
 
+    let options = {
+        expires : new Date(
+            Date.now()+process.env.JSON_EX * 24 *60*60*1000
+        ),
+        httpOnly:true
+    }
+    if(process.env.NODE_ENV === "production"){
+        options.secure = true
+    }
+    res.cookie("jwt",token,options)
+
     res.status(201).send({
         status:"success",
         token,
@@ -45,6 +56,17 @@ UsersRouter.post("/login",CatchAsync(async (req,res,next)=>{
     
     const token = jwt.sign({id:data._id},process.env.JSON_SECRET,{expiresIn:process.env.JSON_EXP})
 
+    let options = {
+        expires : new Date(
+            Date.now()+process.env.JSON_EX * 24 *60*60*1000
+        ),
+        httpOnly:true
+    }
+    if(process.env.NODE_ENV === "production"){
+        options.secure = true
+    }
+    res.cookie("jwt",token,options)
+
     res.status(200).send({
         status:"success",
         token,
@@ -52,14 +74,33 @@ UsersRouter.post("/login",CatchAsync(async (req,res,next)=>{
     })
 }))
 
+UsersRouter.get("/logout",protectionuser,CatchAsync((req,res)=>{
+    const token = req.headers.cookie
+
+    if(token){
+        let options = {
+            expires : new Date(
+                Date.now()+process.env.JSON_EX * 24 *60*60*1000
+            ),
+            httpOnly:true
+        }
+        if(process.env.NODE_ENV === "production"){
+            options.secure = true
+        }
+        res.cookie("jwt",token,options)
+    }
+
+    res.status(200).send("successfully loged out")
+}))
+
 UsersRouter.post("/booking",protectionuser,CatchAsync(async (req,res,next)=>{
     const {flightId,passengerslist}=req.body
     const userId=req.user._id
     let passengers=[]
     
-    let {seats,takeOfTime} = await FlightDetails.findOne({_id:flightId}).select({ "seats":1, "takeOfTime":1 ,"_id": 0})
+    let {seats,takeOfTime,flighttype} = await FlightDetails.findOne({_id:flightId}).select({ "seats":1, "takeOfTime":1 ,"flighttype":1,"_id": 0})
      
-    if(!takeOfTime || !seats){
+    if(!takeOfTime || !seats || !flighttype){
         return next(new Apperr("flight is not available",400))
     }
 
@@ -71,12 +112,34 @@ UsersRouter.post("/booking",protectionuser,CatchAsync(async (req,res,next)=>{
         let obj={}
         let index=-1
 
+        if(!passenger.passengername || !passenger.age || !passenger.phonenumber || !passenger.seattype){
+            return next(new Apperr("please enter the passengers details",400))
+        }
+
         obj["passengername"]=passenger.passengername
         obj["age"]=passenger.age
-        obj["passportnumber"]=passenger.passportnumber
         obj["phonenumber"]=passenger.phonenumber
         obj["seattype"]=passenger.seattype
+        obj["flighttype"]=flighttype
 
+
+        //types of flight
+        if(flighttype.toLowerCase() === "international"){
+            if(!(passenger.passportnumber)){
+                return next(new Apperr("Passportnumber is needed.",400))
+            }
+            obj["passportnumber"]=passenger.passportnumber
+        }else if(flighttype.toLowerCase() === "domestic"){
+            if(passenger.aadhaarnumber){
+                obj["aadhaarnumber"]=passenger.aadhaarnumber
+            }else if(passenger.passportnumber){
+                obj["passportnumber"]=passenger.passportnumber
+            }else{
+                return next(new Apperr("Please enter either passport or aadhaar number",400))
+            }
+        }
+
+        //seat avaible
         seats.forEach((items,indx) => {
             if(passenger.seattype.toLowerCase() === items.seattype.toLowerCase()){
                 return index =indx
@@ -84,7 +147,7 @@ UsersRouter.post("/booking",protectionuser,CatchAsync(async (req,res,next)=>{
         })
 
         if(index == -1){
-            return next(new Apperr("Please enter the seat details",400))
+            return next(new Apperr("Please enter the seat details or the seat is not avavilable",400))
         }
 
         if(!(seats[index].numberseats>0)){
@@ -129,5 +192,27 @@ UsersRouter.get("/booking",protectionuser,CatchAsync(async (req,res,next)=>{
 
     res.status(200).send(data)
 }))
+
+UsersRouter.get("/search",CatchAsync(async(req,res,next)=>{
+    const {departuredate,from,to}=req.query
+
+    if(departuredate){
+        const data = await FlightDetails.find().where("takeOfTime").gte(departuredate)
+        if(!data){
+            return next(new Apperr("There is no data avaible",400))
+        }
+
+        res.status.send(data)
+    }
+
+    if(!from && !to){
+       return next(new Apperr("Please enter the date or departure place",400))
+    }
+
+    const data = await FlightDetails.find().where("from").equals(from.toLowerCase()).where("to").equals(to.toLowerCase())
+
+    res.status.send(data)
+}))
+
 
 module.exports= UsersRouter

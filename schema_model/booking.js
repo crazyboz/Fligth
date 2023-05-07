@@ -13,10 +13,27 @@ const booking = new mongoose.Schema({
             required:[true,"Please enter the age of the passenger"],
             min:0
         },
+        aadhaarnumber:{
+            type:Number,
+            validaye:{
+                validator:function(val){
+                    return /^[0-9]{12}$/.test(val)
+                },
+                message:props => `${props.value} is not a valid aadaar number`
+            }
+        },
         passportnumber:{
             type:String,
-            unique:true,
-            required:[true,"Please enter the passport number"]
+            validaye:{
+                validator:function(val){
+                    return /^[0-9a-zA-Z]{9}$/.test(val)
+                },
+                message:props => `${props.value} is not a valid aadaar number`
+            }
+        },
+        flighttype:{
+            type:String,
+            required:true
         },
         phonenumber:{
             type:Number,
