@@ -14,7 +14,7 @@ UsersRouter.post("/booking",protectionuser,addbooking)
 
 UsersRouter.get("/booking",protectionuser,getbooking)
 
-UsersRouter.get("/search",search)
+UsersRouter.post("/search",search)
 
 
 module.exports= UsersRouter

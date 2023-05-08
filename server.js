@@ -4,7 +4,9 @@ const mongoose= require("mongoose")
 const AppErr=require("./ErrorHandling/App.js")
 const AdminRouter=require("./Routers/Admin.js")
 const UsersRouter = require("./Routers/Users.js")
+const cors = require("cors")
 const app= express()
+
 
 let db=process.env.DB
 db=db.replace("<password>",process.env.DBPASSWORD)
@@ -18,6 +20,7 @@ mongoose.connect(db,{
 }).catch((err)=>{console.log(err)})
 
 app.use(express.json())
+app.use(cors())
 
 //Router
 app.use("/admin",AdminRouter)

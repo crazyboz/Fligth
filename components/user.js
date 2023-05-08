@@ -4,35 +4,44 @@ const Apperr = require("../ErrorHandling/App.js")
 const jwt =require("jsonwebtoken")
 const FlightDetails = require("../schema_model/flight_details.js")
 const BookedDetails = require("../schema_model/booking.js")
-
+const AirportDetails = require("../schema_model/airport.js")
+const mongoose = require("mongoose")
 
 exports.signup = CatchAsync(async (req,res,next)=>{
-    const obj={}
-    obj["username"]=req.body.username
+    let obj={}
+
+    if(!req.body.username){
+        obj["username"]=req.body.email.split("@")[0]
+    }else{
+        obj["username"]=req.body.username
+    }
     obj["email"]=req.body.email
     obj["password"]=req.body.password
     obj["conformpassword"]=req.body.conformpassword
     obj["gender"]=req.body.gender
-
-    const data = await User.create(obj)
-
+    let data = await User.create(obj)
+    
     const token = jwt.sign({id:data._id},process.env.JSON_SECRET,{expiresIn:process.env.JSON_EXP})
 
     let options = {
-        expires : new Date(
-            Date.now()+process.env.JSON_EX * 24 *60*60*1000
+    expires : new Date(
+        Date.now()+process.env.JSON_EX * 24 *60*60*1000
         ),
         httpOnly:true
     }
     if(process.env.NODE_ENV === "production"){
         options.secure = true
     }
+        
     res.cookie("jwt",token,options)
-
-    res.status(201).send({
+        
+    data["password"]=undefined
+    res.status(200).send({
         status:"success",
+        token,
         data
     })
+
 }) 
 
 exports.login = CatchAsync(async (req,res,next)=>{
@@ -60,10 +69,12 @@ exports.login = CatchAsync(async (req,res,next)=>{
     if(process.env.NODE_ENV === "production"){
         options.secure = true
     }
+    
+    data["password"]=undefined
     res.cookie("jwt",token,options)
 
     res.status(200).send({
-        status:"success",
+        status:"success",token,
         data
     })
 })
@@ -81,8 +92,8 @@ exports.logout = CatchAsync((req,res)=>{
     }
     
     res.cookie("jwt","",options)
-
-    res.status(200).JSON({msg:"successfully loged out"})
+    
+    res.status(200).send("successfully loged out")
 })
 
 exports.addbooking = CatchAsync(async (req,res,next)=>{
@@ -176,21 +187,23 @@ exports.getbooking = CatchAsync(async (req,res,next)=>{
 
 exports.search = CatchAsync(async(req,res,next)=>{
     const {departuredate,from,to}=req.body
-
-    if(departuredate){
-        const data = await FlightDetails.find().where("takeOfTime").gte(departuredate)
+    let data = ""
+    let date = ""
+    if(departuredate.length>0){
+        date=(new Date(departuredate)).toISOString()
+        data = await FlightDetails.find().where("takeOfTime").gte(date).populate({path:"from to"})
         if(!data){
-            return next(new Apperr("There is no data avaible",400))
+            return next(new Apperr("There is no data avaible",404))
         }
-
-        res.status.send(data)
+    }else{
+        if(!from && !to){
+            return next(new Apperr("Please enter the date or departure place",400))
+        }
+        
+        data = await FlightDetails.find().where("from").equals(from.toLowerCase()).where("to").equals(to.toLowerCase())
+        
     }
+    
+    res.status(200).send(data)
 
-    if(!from && !to){
-       return next(new Apperr("Please enter the date or departure place",400))
-    }
-
-    const data = await FlightDetails.find().where("from").equals(from.toLowerCase()).where("to").equals(to.toLowerCase())
-
-    res.status.send(data)
 })
