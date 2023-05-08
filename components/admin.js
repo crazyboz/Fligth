@@ -33,9 +33,9 @@ exports.login=CatchAsync(async (req,res,next)=>{
     }
     res.cookie("jwt",token,options)
 
+    data["password"]=undefined
     res.status(200).send({
-        status:"success",
-        
+        status:"success",        
         data
     })
 })
@@ -52,13 +52,16 @@ exports.logout = CatchAsync((req,res)=>{
         options.secure = true
     }
     res.cookie("jwt","",options)
-    res.status(200).json({msg:"successfully loged out"})
+    res.status(200).json({
+        status:"success",        
+        msg:"successfully loged out"
+    })
 })
 
-exports.addflight = CatchAsync(async (req,res)=>{
-    const {flightId,name,from,to,flightTime,takeOfTime,destinationTime,seatList}=req.body
+exports.addflight = CatchAsync(async (req,res,next)=>{
+    const {flightId,name,from,to,flightTime,takeOfTime,destinationTime,seatList,flighttype}=req.body
 
-    if(!flightId || !name || !from || !to || !flightTime || !takeOfTime || !destinationTime || !seatList){
+    if(!flightId || !name || !from || !to || !flightTime || !takeOfTime || !destinationTime || !seatList || !flighttype){
         return next(new Apperr("Please enter the flight details",400))
     }
 
@@ -78,8 +81,11 @@ exports.addflight = CatchAsync(async (req,res)=>{
         seats.push(obj)
     });
 
-    const data = await flightDetails.create({flightId,name,from,to,flightTime,takeOfTime,destinationTime,seats});
-    res.status(200).send(data)
+    const data = await flightDetails.create({flightId,name,from,to,flightTime,takeOfTime,destinationTime,seats,flighttype});
+    res.status(200).send({
+        status:"success",        
+        data
+    })
 })
 
 exports.booking = CatchAsync(async (req,res)=>{
@@ -96,7 +102,10 @@ exports.booking = CatchAsync(async (req,res)=>{
     if(!data){
         return next(new Apperr("There is no data avauble",400))
     }
-    res.status(200).send(data)
+    res.status(200).send({
+        status:"success",        
+        data
+    })
 })
 
 exports.deleteflight = CatchAsync(async (req,res)=>{
@@ -106,7 +115,10 @@ exports.deleteflight = CatchAsync(async (req,res)=>{
     } 
 
     await flightDetails.findOneAndDelete({flightId:id}) 
-    res.status(200).send({"masg":"successfully deleted"})  
+    res.status(200).send({
+        status:"success",        
+        msg:"successfully deleted"
+    })  
 })
 
 exports.addairport = CatchAsync(async (req,res)=>{
@@ -118,5 +130,8 @@ exports.addairport = CatchAsync(async (req,res)=>{
 
     const data = await AirportDetails.create({name,city,country})
 
-    res.status(200).send(data)
+    res.status(200).send({
+        status:"success",        
+        data
+    })
 })

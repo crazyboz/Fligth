@@ -186,7 +186,7 @@ exports.getbooking = CatchAsync(async (req,res,next)=>{
 })
 
 exports.search = CatchAsync(async(req,res,next)=>{
-    const {departuredate,from,to}=req.body
+    const {departuredate,from,to}=req.query
     let data = ""
     let date = ""
     if(departuredate.length>0){
